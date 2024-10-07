@@ -27,7 +27,6 @@ INSERT INTO my_table (name, age, email) VALUES
 ('Alice', 30, 'alice@example.com'),
 ('Bob', 25, 'bob@example.com'),
 ('Charlie', 35, 'charlie@example.com');
-
 5. Query the Data
 To retrieve the data and count records individually, you can use the SELECT statement. Here are a few examples:
 
@@ -46,3 +45,4 @@ Use the Database: USE my_database;
 Create a Table: Define columns and their data types.
 Insert Data: Use INSERT INTO to add records.
 Query Data: Use SELECT COUNT(*) to get totals, optionally with WHERE for conditions.
+Feel free to adjust the table structure and queries according to your specific needs! If you have any questions or need further details, just let me know.
