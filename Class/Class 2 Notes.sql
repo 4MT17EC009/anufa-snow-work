@@ -14,7 +14,7 @@ CREATE TABLE table_name (
 Example:
 
 CREATE TABLE employees (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id INT,
     name VARCHAR(100),
     age INT,
     email VARCHAR(100)
@@ -30,13 +30,13 @@ Example (adding a column):
 
 ALTER TABLE employees
 ADD hire_date DATE;
-Example (modifying a column):
-sql
-Copy code
-ALTER TABLE employees
-MODIFY age SMALLINT;
-DROP
 
+Example (modifying a column):
+
+ALTER TABLE employees
+MODIFY age INT;
+
+DROP
 Purpose: Used to delete an existing database object, such as a table, view, or index. This command removes the object and all its data permanently.
 Syntax:
 
@@ -44,8 +44,8 @@ DROP TABLE table_name;
 Example:
 
 DROP TABLE employees;
-TRUNCATE
 
+TRUNCATE
 Purpose: Used to remove all records from a table without removing the table itself. Unlike DELETE, TRUNCATE is faster and does not log individual row deletions.
 Syntax:
 
