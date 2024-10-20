@@ -1,0 +1,111 @@
+Stage can be internal/external locations .
+	
+	1) create internal stage 
+	2) load data into stages 
+	3) from stage you can copy into table 
+
+internal stages:
+>> Under our first DB Database create a Table
+
+CREATE or replace TABLE  LOAN_PAYMENT_vitech  (
+   Loan_ID  STRING,
+   loan_status  STRING,
+   Principal  STRING,
+   terms  STRING,
+   effective_date  STRING,
+   due_date  STRING,
+   paid_off_time  STRING,
+   past_due_days  STRING,
+   age  STRING,
+   education  STRING,
+   Gender  STRING);
+
+select * from LOAN_PAYMENT_vitech
+
+//create stage 
+CREATE OR REPLACE STAGE MY_INTER_STAGE;
+
+list @MY_INTER_STAGE ;
+
+//load data into stage 
+put file://D:\files\2024-10-0911_07am.csv @MY_INTER_STAGE; // Put does not support for internal Stages
+
+"C:\Files\2024-10-19 10_40pm.csv"  >> path of file
+
+//describe stages 
+list @MY_INTER_STAGE
+
+>> For Internal stage, will use PUT Command, but its not going to support
+PUT command is not going to work, for Web UI, for this we need to use SnowSQL
+
+>> 2 OPTIONS TO LOAD THE FILE
+1) go to home
+2) click on Data
+3) Add Data
+4) Load Files into Stage
+5) browse and select File and Load
+6) select the stage
+7) Upload
+
+CREATE OR REPLACE STAGE MY_INTER_STAGE;   >> ERROR
+
+//describe stages 
+list @MY_INTER_STAGE
+
+//copy data from stages 
+copy into LOAN_PAYMENT_vitech from @MY_INTER_STAGE
+file_format = (type = csv 
+                   field_delimiter = ',' 
+                   skip_header=1);
+
+select * from LOAN_PAYMENT_vitech;
+
+
+
+drop table LOAN_PAYMENT_vitech
+
+undrop table LOAN_PAYMENT_vitech
+
+2nd METHOD BY USING SNOWSQL
+1) Go to profile
+2) Click on client Download
+3) SnowSQL Download
+
+------------inernal stage client download setup----
+download and install 
+					
+					Run --> %USERPROFILE%\.snowsql\ 
+					      we need to change configuration file 
+						  
+						account --> fm30665.central-india.azure 
+						  user ---  vitschool
+						  password --  test2344
+						  
+						  
+						  
+						                 cmd --> snowsql -v 
+						  
+						to connect with snowflake -->  snowsql -c example 
+
+
+1) Orders Table created
+
+CREATE OR REPLACE TABLE OUR_FIRST_DB.PUBLIC.ORDERS (
+    ORDER_ID VARCHAR(30),
+    AMOUNT INT,
+    PROFIT INT,
+    QUANTITY INT,
+    CATEGORY VARCHAR(30),
+    SUBCATEGORY VARCHAR(30));
+
+2) Create a STAGE
+CREATE OR REPLACE STAGE MY_INTERNAL_STAGE;
+
+select * from PUBLIC.ORDERS
+
+list @MY_INTERNAL_STAGE;
+
+copy into public.orders from @MY_INTERNAL_STAGE
+file_format = (type = csv 
+                   field_delimiter = ',' 
+                   skip_header=1);

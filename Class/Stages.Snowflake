@@ -1,0 +1,23 @@
+ --- Stage ---
+ Snowflake, a stage is a storage location where we load all the files
+ Stages serve as an intermediary between your data files (stored in cloud storage like AWS S3, Azure Blob Storage, or Google Cloud Storage) and Snowflake tables. 
+ Stage can be internal/external locations .
+	
+	1) create internal stage 
+	2) load data into stages 
+	3) from stage you can copy into table 
+
+--- Types of Stages ---
+1) Internal Stage
+2) External Stage
+
+--- Internal Stage ---
+> Files available in the local system
+
+--- External Stage ---
+> Files that is available out of the local System
+> AWS, Azure, GCP, Kafka, IOT, Sensors
+
+AWS --> Stage --> Snowflake (Using COPY Command)
+
+>> In Internal stage as well External stage we will be using COPY command itself to load the data
