@@ -1,0 +1,33 @@
+--- DATA LOADING--
+>> How to load data from Amazon s3 bucket to Snowflake
+
+ETL - Extract, Transformation and LOADING
+ELT - Extract, Loading and Transformation (Snowfalke mainly use ELT)
+
+2 Ways 
+1) Bulk Loading
+2) Continuous Loading
+
+>> Bulk Loading
+- Most frequent Method Used, Bulk loading refers to the process of loading large volumes of data at once, typically in batches. This is usually done during scheduled intervals (e.g., nightly, weekly).
+- Efficient for loading large datasets.
+- Uses Warehouse
+- Loading from Stages
+- COPY COMMAND
+- Transformations are possible
+
+>> Continuous loading
+- Designed to load small volumes of data
+- automatically once Added to Stages
+- Lates result for Analysis
+- SNOWPIE (Serverless Feature)
+
+- ELT - Extract, Loading and Transformation (Snowfalke mainly use ELT)
+>> Amazon S3 bucket is the source and Snowflake is the Destination
+>> We have to load the file in S3 Bucket to Snowflake, which will be done directly using COPY Command, and later the transformations can be applied using CASE
+
+ETL - Extract, Transformation and LOADING
+>> If there are 50 files in Amazon s3 bucket, we cannot write copy command over 50 times, So, we first Extract the files from S3 Bucket and load it to Stages, Stage is used as a storage location of files, Once the files are into Stage, we apply Transformations and finally load it into Snowflake
+
+
+
