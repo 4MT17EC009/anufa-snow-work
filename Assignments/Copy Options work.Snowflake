@@ -1,0 +1,187 @@
+// Creating ORDERS table
+
+CREATE OR REPLACE TABLE OUR_FIRST_DB.PUBLIC.ORDERS (
+    ORDER_ID VARCHAR(30),
+    AMOUNT INT,
+    PROFIT INT,
+    QUANTITY INT,
+    CATEGORY VARCHAR(30),
+    SUBCATEGORY VARCHAR(30));
+
+SELECT * FROM OUR_FIRST_DB.PUBLIC.ORDERS;
+
+// First Step is to create a Stage
+
+ CREATE OR REPLACE STAGE OUR_FIRST_DB.public.aws_stage
+    url='s3://bucketsnowflakes3';
+
+// Lets see how many files are inside the Stage
+
+list @OUR_FIRST_DB.public.aws_stage   >3 Files
+
+// out of 3 files we want to take only order details file
+files = file name to be mentioned to retrieve the required file out of n files in the stage
+
+// copy command with Specified files
+
+COPY INTO OUR_FIRST_DB.PUBLIC.ORDERS
+    FROM @OUR_FIRST_DB.public.aws_stage
+    file_format= (type = csv field_delimiter=',' skip_header=1)
+    files = ('OrderDetails.csv');
+
+// Validate the Table
+Select * from OUR_FIRST_DB.PUBLIC.ORDERS
+
+// If we dont know our file name or if there are one or more order named files, what we can do is use Pattern command -> '.*Order.*'
+
+// Copy command with pattern for file names
+
+COPY INTO OUR_FIRST_DB.PUBLIC.ORDERS
+    FROM @OUR_FIRST_DB.public.aws_stage
+    file_format= (type = csv field_delimiter=',' skip_header=1)
+    pattern='.*Order.*'
+    force = true
+
+// Again if we run the command its not going to process as the file hasalready been processed in this case we have a COPY OPTION that's Force
+// If Force = true, to load all the files, regardless of whether it has been loaded previously
+
+// validate everything
+Select * from OUR_FIRST_DB.PUBLIC.ORDERS
+
+-----------------------
+
+Stage had multiple files > 3 Files
+//Create a stage
+
+CREATE OR REPLACE STAGE OUR_FIRST_DB.public.aws_stage_errorex
+    url='s3://bucketsnowflakes4'
+
+list @OUR_FIRST_DB.public.aws_stage_errorex
+
+//We need to load the data so first lets recreate for the table
+
+CREATE OR REPLACE TABLE OUR_FIRST_DB.PUBLIC.ORDERS_ex_1 (
+    ORDER_ID VARCHAR(30),
+    AMOUNT INT,
+    PROFIT INT,
+    QUANTITY INT,
+    CATEGORY VARCHAR(30),
+    SUBCATEGORY VARCHAR(30));
+  
+Select * from OUR_FIRST_DB.PUBLIC.ORDERS_ex_1 
+
+COPY INTO OUR_FIRST_DB.PUBLIC.ORDERS_ex_1
+    FROM @OUR_FIRST_DB.public.aws_stage_errorex
+    file_format= (type = csv field_delimiter=',' skip_header=1)
+    pattern='.*Order.*'
+     VALIDATION_MODE = return_5_rows 
+
+// It did validate 5 rows and displayed the result as there were no errors
+
+COPY INTO OUR_FIRST_DB.PUBLIC.ORDERS_ex_1
+    FROM @OUR_FIRST_DB.public.aws_stage_errorex
+    file_format= (type = csv field_delimiter=',' skip_header=1)
+    pattern='.*Order.*'
+     VALIDATION_MODE = return_100_rows 
+
+// No need of validation, just if we want errors, we use return_errors, return_all_errors
+
+COPY INTO OUR_FIRST_DB.PUBLIC.ORDERS_ex_1
+    FROM @OUR_FIRST_DB.public.aws_stage_errorex
+    file_format= (type = csv field_delimiter=',' skip_header=1)
+    pattern='.*Order.*'
+    VALIDATION_MODE = return_errors
+
+COPY INTO OUR_FIRST_DB.PUBLIC.ORDERS_ex_1
+    FROM @OUR_FIRST_DB.public.aws_stage_errorex
+    file_format= (type = csv field_delimiter=',' skip_header=1)
+    pattern='.*Order.*'
+    VALIDATION_MODE = return_all_errors    
+    
+// If I dont want to be bother about the errors and just continue insering the data we use ON_ERROR
+
+COPY INTO OUR_FIRST_DB.PUBLIC.ORDERS_ex_1
+    FROM @OUR_FIRST_DB.public.aws_stage_errorex
+    file_format= (type = csv field_delimiter=',' skip_header=1)
+    pattern='.*Order.*'
+    on_error = continue 
+
+select * from OUR_FIRST_DB.PUBLIC.ORDERS_ex_1
+
+//Lets create table again and learn on_error = skip file
+
+CREATE OR REPLACE TABLE OUR_FIRST_DB.PUBLIC.ORDERS_ex_1 (
+    ORDER_ID VARCHAR(30),
+    AMOUNT INT,
+    PROFIT INT,
+    QUANTITY INT,
+    CATEGORY VARCHAR(30),
+    SUBCATEGORY VARCHAR(30));
+
+// ON_ERROR = SKIP FILE means the file that has errors is going to skip completely
+
+COPY INTO OUR_FIRST_DB.PUBLIC.ORDERS_ex_1
+    FROM @OUR_FIRST_DB.public.aws_stage_errorex
+    file_format= (type = csv field_delimiter=',' skip_header=1)
+    pattern='.*Order.*'
+    on_error = skip_file 
+
+// Validate
+
+select * from OUR_FIRST_DB.PUBLIC.ORDERS_ex_1
+
+//If we want to skip file number 1, 3 then skip_file1, skip_file3
+
+COPY INTO OUR_FIRST_DB.PUBLIC.ORDERS_ex_1
+    FROM @OUR_FIRST_DB.public.aws_stage_errorex
+    file_format= (type = csv field_delimiter=',' skip_header=1)
+    pattern='.*Order.*'
+    on_error = skip_file 
+    force = true
+
+// Size_limit
+if we have 10 files and we dont want to load all at once, its going to check the size of the file and if it comes in that limit it will take files wch is under the size limit
+
+
+    COPY INTO OUR_FIRST_DB.PUBLIC.ORDERS_ex_1
+    FROM @OUR_FIRST_DB.public.aws_stage_errorex
+    file_format= (type = csv field_delimiter=',' skip_header=1)
+    pattern='.*Order.*'
+    size_limit = 20000 
+    on_error = continue
+
+
+    COPY INTO OUR_FIRST_DB.PUBLIC.ORDERS_ex_1
+    FROM @OUR_FIRST_DB.public.aws_stage_errorex
+    file_format= (type = csv field_delimiter=',' skip_header=1)
+    pattern='.*Order.*'
+    size_limit = 60000
+    on_error = continue
+    
+// Truncate Columns/ Enforced Length
+We have a data in category field which is more than 4 or 5 characters
+lets keep category size has 3 bytes by mistake but data is correct, now i need to load the data
+
+  CREATE OR REPLACE TABLE OUR_FIRST_DB.PUBLIC.ORDERS_ex_2 (
+    ORDER_ID VARCHAR(30),
+    AMOUNT INT,
+    PROFIT INT,
+    QUANTITY INT,
+    CATEGORY VARCHAR(3),
+    SUBCATEGORY VARCHAR(30));
+
+  COPY INTO OUR_FIRST_DB.PUBLIC.ORDERS_ex_2
+    FROM @OUR_FIRST_DB.public.aws_stage_errorex
+    file_format= (type = csv field_delimiter=',' skip_header=1)
+    pattern='.*Order.*'
+// it will give error so we need to use truncate columns or enforced length
+
+ COPY INTO OUR_FIRST_DB.PUBLIC.ORDERS_ex_2
+    FROM @OUR_FIRST_DB.public.aws_stage_errorex
+    file_format= (type = csv field_delimiter=',' skip_header=1)
+    pattern='.*Order.*'
+   TRUNCATECOLUMNS = true 
+   on_error = continue 
+
+select * from OUR_FIRST_DB.PUBLIC.ORDERS_ex_2
+

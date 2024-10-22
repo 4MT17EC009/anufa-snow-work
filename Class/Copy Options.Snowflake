@@ -1,0 +1,93 @@
+>>COPY COMMAND
+The COPY INTO command in Snowflake is a powerful SQL command used for loading data into tables from various sources 
+-- Syntax
+Copy INTO Table_Name 
+from @Externalstage
+files = ( <file_name>, <file_name_2)
+file_format = <file_format_name>
+
+
+>>COPY OPTIONS
+1) VALIDATION_MODE
+2) RETURN_FAILED_ONLY
+3) ON_ERROR
+4) FORCE
+5) SIZE_LIMIT
+6) TRUNCATECOLUMNS
+7) ENFORCE_LENGHTHS
+8) PURGE
+
+-- Top load the data from AWS to Snowflake with or without creation of Stages, we use the COPY Option--
+
+1) VALIDATION_MODE
+>> Syntax
+Copy INTO Table_Name 
+from @Externalstage
+files = ( <file_name>, <file_name_2)
+file_format = <file_format_name>
+Validation_Mode = Return_n_rows | return_errors | return_all_errors
+
+>>Validate the data files instead of loading them into a table
+>> return_n_rows - we need to validate rows, how many rows is n rows, the rows that does not have error gets validated and gives us the result
+>> return_erros gives all the errors in the files present at stage
+>> return_all_errors returns all the errors from the current loaded files as well as from the previously loaded files
+>> we have 200 records in a stage to find the errors we need to use return_errors
+
+2) RETURN_FAILED_ONLY
+>> Syntax
+Copy INTO Table_Name 
+from @Externalstage
+files = ( <file_name>, <file_name_2)
+file_format = <file_format_name>
+return_failed_only = True/False
+
+>>Specifies whether to return only files that have failed to load in the statement result
+
+3) ON_ERROR
+>> Syntax
+Copy INTO Table_Name 
+from @Externalstage
+files = ( <file_name>, <file_name_2)
+file_format = <file_format_name>
+on_error = continue | skip_file | skip_file_num | skip_file_num% | abort_statement
+
+>>on_error = continue -> to skip error records and load the records
+>>on_error = skip_file -> to skip the files that contains errors
+>>on_error = skip_file_num -> Which file among the files to be skipped, skip a file when the number of error rows found in the files is equal to or exceeds the specified number
+>>on_error = skip_file_num% -> Skip a file when the percentage of errors rows found in the file exceeds the specified percentage
+Default is abort_statement -> Abort the load operation, if any error is found in a data file
+
+4) FORCE
+>> Syntax
+Copy INTO Table_Name 
+from @Externalstage
+files = ( <file_name>, <file_name_2)
+file_format = <file_format_name>
+force = True|False
+
+>>To load all the files, regardless of whether they have been loaded previously
+>>Default is false, if we dont specify the property, copy command will not fail but it skips loading the data
+
+5) SIZE_LIMIT
+>> Syntax
+Copy INTO Table_Name 
+from @Externalstage
+files = ( <file_name>, <file_name_2)
+file_format = <file_format_name>
+Size_limit = <Number>;
+
+>> Specify Maximum size in bytes of data loaded in that command 
+>> when the Threshhold is exceeded, the copy operation stops loading
+>> in case of multiple files of same patterns also it will stop after the size limit, that means some files can be loaded fully and one file will be loaded partially
+
+6) TRUNCATE_COLUMN OR ENFORCE_LENGHTHS
+>> Syntax
+Copy INTO Table_Name 
+from @Externalstage
+files = ( <file_name>, <file_name_2)
+file_format = <file_format_name>
+Truncate_Columns = True | False
+
+>> Specifies whether to truncate text strings that exceeds the target column length
+>> Default is False, that means we dont specify this option, and if text strings that exceeds the target column length, then copy command will fail
+
