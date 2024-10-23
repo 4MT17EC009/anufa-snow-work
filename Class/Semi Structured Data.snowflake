@@ -1,0 +1,29 @@
+---Semi Structured Data---
+JSON (JavaScript Object Notation): Widely used in web applications for data interchange.
+XML (eXtensible Markup Language): Often used for data storage and transmission, especially in web services.
+Parquest
+
+Eg-
+{"Name" : "Nethra"
+ "Class" : "Snowflake"                   >> Attributes and values
+ "Timings" : "11AM Batch"
+}
+
+//We need to convert the JSON form into table and store the data into table format and retrieve the data
+
+In tabluar form, data looks like
+Name            Class             Timings
+Nethra        Snowflake         11 AM Batch 
+
+Theres a data in the bucket (s3) it contains JSON data, in order to load the data from AWS - Snowflake
+1) create a stage (structured or semi structured data)
+2) For JSON, VARIANT IS THE DATATYPE
+3) create a file format, with type=JSON
+4) To load the data create a JSON Raw Table
+5) Using Copy option load the data
+6) the data is going to look in the JSON format
+7) We need to keep the values into tables
+      1) using Column Option
+      2) Using $ option
+8) Use :: Datatype as Alias name
+9) store everything in the table

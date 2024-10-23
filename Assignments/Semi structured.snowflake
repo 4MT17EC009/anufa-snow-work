@@ -1,0 +1,131 @@
+//Create database
+Create database manage_db;
+
+//create External Stage
+Create schema external_stages;
+Create schema file_formats ;
+
+// Be it structured or Semi structured data first thing is to create a Stage
+
+CREATE OR REPLACE Stage manage_db.External_stages.JSONSTAGE
+      url = 's3://bucketsnowflake-jsondemo';
+
+list @manage_db.External_stages.JSONSTAGE
+
+//Create a file Format
+CREATE OR REPLACE file format manage_db.file_formats.Jsonformat
+  type = json ;
+
+//Before loading lets create a JSON raw table
+Create or replace table our_first_db.public.Json_Raw (
+      raw_file variant ) ;
+
+//load the data using Copy Option
+copy into our_first_db.public.Json_Raw
+from @manage_db.External_stages.JSONSTAGE
+file_format = manage_db.file_formats.Jsonformat
+files = ('HR_data.json');
+
+select * from our_first_db.public.Json_Raw
+
+//Retrive values from JSON, eg we need to retrieve gender or keep certain values in different table
+2 ways 
+1) Using Column name
+2) Using $ option
+
+select raw_file:city,
+       raw_file:first_name,
+       raw_file:gender,
+       raw_file:id
+
+       from our_first_db.public.Json_Raw
+
+select $1:city,
+       $1:first_name,
+       $1:gender,
+       $1:id
+
+       from our_first_db.public.Json_Raw
+
+select * from our_first_db.public.Json_Raw
+
+//we need to remove the raw_file name from the result and remove the double quotes in which the values are written
+
+select raw_file:city::string as city,
+       raw_file:first_name::string as first_name,
+       raw_file:gender::string as gender,
+       raw_file:id::string as id
+
+       from our_first_db.public.Json_Raw
+
+//create a Table
+create OR replace table hr_data as  (
+select raw_file:city::string as city,
+       raw_file:first_name::string as first_name,
+       raw_file:gender::string as gender,
+       raw_file:id::string as id,
+       raw_file:job.salary::int as salary,
+       raw_file:job.title::string as title
+
+       from our_first_db.public.Json_Raw
+    )
+//If its an array
+
+create OR replace table hr_data as  (
+select raw_file:city::string as city,
+       raw_file:first_name::string as first_name,
+       raw_file:gender::string as gender,
+       raw_file:id::string as id,
+       raw_file:job.salary::int as salary,
+       raw_file:job.title::string as title,
+       raw_file:spoken_languages[0].language::string as first_language
+
+       from our_first_db.public.Json_Raw
+    )
+
+select * from hr_data
+
+//If we need to separate anything or add anything take the data, old data and modify
+
+select raw_file:city,
+       raw_file:first_name,
+       raw_file:gender,
+       raw_file:id,
+       raw_file:job.salary
+
+       from our_first_db.public.Json_Raw
+
+//For Parquet File
+
+//Created File Format
+CREATE OR REPLACE FILE FORMAT MANAGE_DB.FILE_FORMATS.PARQUET_FORMAT
+    TYPE = 'parquet';
+
+//Create Stage
+CREATE OR REPLACE STAGE MANAGE_DB.EXTERNAL_STAGES.PARQUETSTAGE
+    url = 's3://snowflakeparquetdemo'  
+
+list @MANAGE_DB.EXTERNAL_STAGES.PARQUETSTAGE
+
+//Before loading lets create a JSON raw table
+Create or replace table our_first_db.public.Parquet_Raw (
+      raw_file variant ) ;
+
+//Copy Option and load data
+copy into our_first_db.public.PARQUET_RAW
+from @manage_db.External_stages.PARQUETSTAGE
+file_format = manage_db.file_formats.parquet_format
+files = ('daily_sales_items.parquet');
+
+//Validate
+select * from our_first_db.public.PARQUET_RAW
+
+//we need to remove the raw_file name from the result and remove the double quotes in which the values are written
+
+select raw_file:__index_level_0__::int as index_id,
+       raw_file:cat_id::string as cat_id,
+       raw_file:date::int as date,
+       raw_file:departement_id::string as dep_id
+
+       from our_first_db.public.PARQUET_RAW
+
