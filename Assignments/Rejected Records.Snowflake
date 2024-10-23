@@ -1,0 +1,90 @@
+>> Working with Rejected/error Records
+Lets assume there are 100 records out of which 10 records have error
+if we use on_error = continue, 90 records will get loaded but what about the 10 other records ?
+
+//Create Database
+CREATE DATABASE COPY_DB;
+
+//Create stage
+CREATE OR REPLACE STAGE COPY_DB.PUBLIC.aws_stage_copy
+    url='s3://snowflakebucket-copyoption/returnfailed/';
+
+//Verify files at Stage
+LIST @COPY_DB.PUBLIC.aws_stage_copy;    
+
+//Create a Table
+CREATE OR REPLACE TABLE  COPY_DB.PUBLIC.ORDERS (
+    ORDER_ID VARCHAR(30),
+    AMOUNT VARCHAR(30),
+    PROFIT INT,
+    QUANTITY INT,
+    CATEGORY VARCHAR(30),
+    SUBCATEGORY VARCHAR(30));
+
+COPY INTO COPY_DB.PUBLIC.ORDERS
+FROM @aws_stage_copy
+file_format= (type = csv field_delimiter=',' skip_header=1)
+pattern='.*Order.*'
+on_error = continue
+
+//There are 4 Error records and we dont want to miss it and load entire Data
+
+Select count(*) from orders  --> 4781 --> 4785 (4 Error Records)
+
+// First keep validation mode as return errors
+
+COPY INTO COPY_DB.PUBLIC.ORDERS
+FROM @aws_stage_copy
+file_format= (type = csv field_delimiter=',' skip_header=1)
+pattern='.*Order.*'
+Validation_mode = return_errors
+
+//Based on query id we can see the results whenever we want
+
+//lets fetch only rejected records first
+
+select rejected_record from table (result_scan(last_query_id()))
+
+//Now we need to keep the rejected records in a table
+CREATE OR REPLACE TABLE rejected AS 
+select rejected_record from table(result_scan(last_query_id()));
+
+select * from rejected
+
+//Use split Part 
+CREATE OR REPLACE TABLE rejected_values as
+SELECT 
+SPLIT_PART(rejected_record,',',1) as ORDER_ID, 
+SPLIT_PART(rejected_record,',',2) as AMOUNT, 
+SPLIT_PART(rejected_record,',',3) as PROFIT, 
+SPLIT_PART(rejected_record,',',4) as QUANTITY, 
+SPLIT_PART(rejected_record,',',5) as CATEGORY, 
+SPLIT_PART(rejected_record,',',6) as SUBCATEGORY
+FROM rejected; 
+
+select * from rejected_values;
+
+//To fix the rejected errors
+//Update and Set and apply where clause
+
+UPDATE rejected_values 
+   SET PROFIT = 1000
+   WHERE PROFIT = 'one thousand'
+
+UPDATE rejected_values 
+   SET PROFIT = 220
+   WHERE PROFIT = 'two hundred twenty'
+
+delete from rejected_values
+
+select * from rejected_values
+
+
+INSERT INTO ORDERS 
+   (SELECT * FROM rejected_values)
+
+// Lets see the total count from orders table
+
+select count (*) from orders
+
+select * from orders
