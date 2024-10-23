@@ -1,0 +1,19 @@
+Working with rejected/Error Records
+
+1) Create a stage  and list the same (Verify the files )
+2) Create table with columns
+3) Using copy command to load the data
+
+ If there is any error it is going to fail
+
+ if it fails we can use on_error = continue (Skip the error records)
+     4785 --> 4781 loaded
+
+
+run the copy command with validation_mode = return_errors
+
+use results_scan table to get records into separate table first
+
+Once it is separated use split_part function to split the records and Correct the data
+
+Run the copy command to load valid data then add the rejected records into final table
