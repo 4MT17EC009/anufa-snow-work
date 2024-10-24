@@ -1,0 +1,25 @@
+--- AWS Integration with Snowflake ---
+we have data in AWS Bucket, we need to load data to Snowflake
+>> how to create s3 bucket, upload the file, creation of roles, get access to read the data
+
+Steps to be Followed 
+		 
+1. Create Free Trail account in AWS 
+2. Create a bucket and load the files (CSV/JSON)
+3. Create IAM roles 
+4. Create integration object in snowflake  and describe 
+5. copy user arn and exrternal id and add the values into trustrelation ships (IAM)
+6. Create a stage and copy the data into a table 
+7. Before step-6 you need to create a table 
+
+
+Open AWS account
+Go to search and type s3 and click on s3 bucket
+click on create bucket and give bucket name - vitech-snowflake-11AM
+inside bucket create 2 folders 1) CSV and 2)JSON
+Upload the data csv file as well as the JSON data
+click on CSV and JSON file and copy the s3 URL and keep onto notepad
+In order to access file we need to create IAM roles
+Click on IAM create roles and keep external_id as 0000
+click on s3fullaccess and create a policy
+open the role created and copy arn
