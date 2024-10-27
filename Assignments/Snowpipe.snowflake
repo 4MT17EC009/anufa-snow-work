@@ -1,0 +1,77 @@
+///Create the Integration
+create or replace storage integration s3_int_pipe
+  TYPE = EXTERNAL_STAGE
+  STORAGE_PROVIDER = S3
+  ENABLED = TRUE 
+  STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::626635435307:role/vitech-snowflake-11am-batch'
+  STORAGE_ALLOWED_LOCATIONS = ('s3://vitech-snowflake-11am/csv/employee_data_1 - employee_data_1.csv')
+   COMMENT = 'Ts3 integration' 
+   
+   
+// See storage integration properties to fetch external_id so we can update it in S3
+DESC integration s3_int_pipe;
+
+
+ // Create stage object with integration object & file format object to see if we can read the data
+CREATE OR REPLACE stage MANAGE_DB.external_stages.emp_data_stage
+    URL = 's3://vitech-snowflake-11am/csv/employee_data_1 - employee_data_1.csv'
+    STORAGE_INTEGRATION = s3_int_pipe
+    FILE_FORMAT = MANAGE_DB.file_formats.csv_fileformat
+
+list @MANAGE_DB.external_stages.emp_data_stage;
+
+
+copy into 
+
+
+
+--id,first_name,last_name,email,location,department
+
+// Create table first
+CREATE OR REPLACE TABLE OUR_FIRST_DB.PUBLIC.employees (
+  id INT,
+  first_name STRING,
+  last_name STRING,
+  email STRING,
+  location STRING,
+  department STRING
+  )
+
+//Manual Invention
+ copy into  OUR_FIRST_DB.PUBLIC.employees  
+ from @MANAGE_DB.external_stages.emp_data_stage;
+
+select * from OUR_FIRST_DB.PUBLIC.employees
+
+//If another file, we need to list and perform copy again and again, so we need to use the concept of PIPE
+
+create schema MANAGE_DB.pipe;
+
+// create a pipe
+CREATE OR REPLACE pipe MANAGE_DB.pipe.employee_pipe
+auto_ingest = TRUE
+AS
+COPY INTO OUR_FIRST_DB.PUBLIC.employees
+FROM @MANAGE_DB.external_stages.emp_data_stage; 
+
+// Describe pipe
+DESC pipe employee_pipe
+    
+SELECT * FROM OUR_FIRST_DB.PUBLIC.employees    
+
+show pipes;
+
+//very first time refresh the pipe
+ALTER PIPE  MANAGE_DB.pipe.employee_pipe refresh
+
+
+// Pause pipe
+ALTER PIPE MANAGE_DB.pipe.employee_pipe SET PIPE_EXECUTION_PAUSED = true
+
+
+ALTER PIPE MANAGE_DB.pipe.employee_pipe SET PIPE_EXECUTION_PAUSED = false
+ 
+ 
+// Verify pipe is paused and has pendingFileCount 0 
+SELECT SYSTEM$PIPE_STATUS('MANAGE_DB.pipe.employee_pipe') 
+
