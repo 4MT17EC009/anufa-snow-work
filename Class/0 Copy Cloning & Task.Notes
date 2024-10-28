@@ -1,0 +1,32 @@
+-- zero Copy Cloning --
+What is cloning ?
+To replicate the same data, schema, database, object 
+
+->  we have a table employee (1 GB Data)
+For 1 GB --> 1$/Month
+if we are having 5 backup copies in normal database we need to pay for the back up copies as well as the original data
+--> in Snowflake, even if we are taking back up copies we need not pay anything extra, we need to pay only for the original data
+
+-> Create copies of Database, schema, table, object
+-> Cloned object is independent from original
+-> Easy to copy all metadata and improved storage
+-> Creating backups for Development purposes
+-> Works with Travel time as well
+-> We can maintain multiple copies of data with no additional cost, Hence Zero Copy Cloning
+
+NOTE - > Temporary table cannot be cloned to a permanent table, clone to a transient table instead
+Temporary to temporary cloning is always possible
+
+
+-- Task --
+In order to schedule any program or any SQL Statements we use Task
+-> Generally we use scheduling tools like TWS, controle m but in snowflake no tools are required
+
+Example - > we keep alarm at 5 am, without any manual intervention its going to run, if we have an sql query which has to run for every 2 mins without using any tools we need to go for Task
+
+Steps
+1) Understand the Task
+2) Create a Task
+3) Schedule the Task
+4) Tree of Tasks -> Create number of Tasks
+5) Check Task History
