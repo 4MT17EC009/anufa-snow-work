@@ -1,0 +1,47 @@
+-- streams --
+We use streams to implement CDC ( Change Data Capture)
+whatever the chages we perform into the source table it should get implemented/inserted on to the target table as well without any manual intervention
+in order to do this we need to create STREAM object
+
+source table -> stream object -> Target Table
+As soon as we load the data from the stream object to the Target Table, whatever the data is into the stream object is going to EXTERNAL_STAGE
+
+OPERATION
+We can perform Insert, update and delete
+
+Syntax
+Create stream <stream_name>
+on table <table name >
+     CDC--> Change Data Capture
+
+    1) Create Source tables (1,2,3)
+    2) Create Stream object
+    3) Create final table (Target)
+    4) Write an SQL to copy data from stream /source to Final table
+    5) On top of insert SQL write Task for 1 minutes
+       (* * * * *) / (0/1 * * * *)    
+    6) insert values into Source table  
+    7) verify the values are present in Stream object
+    8) Verify the final table
+                    (If the values are present in final table then CDC / stream is working )
+                   
+------------------------------
+
+
+-- Data Masking --
+To provide  security to data we use data Masking
+The sensitive data need to be protected like account details/ credit card number with some symbols like * or # then we use Data Masking
+
+2 people
+Analyst                                     Read Only user
+He should be able to see                  He should be able to see 
+ entire data clearly                      Masked values/Partial Data
+
+ In order to do this steps to be followed :
+ 1)Create roles
+ 2)Give Database access to both roles
+ 3)give Table access
+ 4)Grant schema access
+ 5)Assign roles to users
+ 6)Use masking policy
+ 7)Apply policy on specific column using alter option 
