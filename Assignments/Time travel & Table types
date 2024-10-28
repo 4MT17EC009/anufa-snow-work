@@ -1,0 +1,116 @@
+select * from COPY_DB.PUBLIC.ORDERS  
+
+show tables;
+
+
+//modify few fields and delete
+update COPY_DB.PUBLIC.ORDERS 
+        set amount = 50 
+
+select * from COPY_DB.PUBLIC.ORDERS
+
+delete from COPY_DB.PUBLIC.ORDERS 
+where profit > 30
+
+//retrieve original Historical data > Time travel
+3 ways
+1) Offset
+2) Time stamp
+3) query id
+
+ALTER TABLE COPY_DB.PUBLIC.ORDERS SET DATA_RETENTION_TIME_IN_DAYS=90;
+
+// // // Using time travel: Method 1 - 2 minutes back
+SELECT * FROM COPY_DB.PUBLIC.ORDERS at (OFFSET => -60*2.5)
+
+select sysdate();
+
+SELECT * FROM COPY_DB.PUBLIC.ORDERS 
+
+// // // Using time travel: Method 2 - before timestamp
+SELECT * FROM COPY_DB.PUBLIC.ORDERS before (timestamp => '2024-10-27 18:30:19.744'::timestamp)
+
+
+SELECT * FROM COPY_DB.PUBLIC.ORDERS
+
+SELECT * FROM COPY_DB.PUBLIC.ORDERS before (statement => '01b7f9b0-0001-35f6-0005-e6360003339a')
+
+
+ALTER TABLE test SET DATA_RETENTION_TIME_IN_DAYS=30;
+
+
+
+------------------------------
+Table Types 
+
+
+show tables;
+
+
+
+create or replace TABLE COPY_DB.PUBLIC.profit (
+	ORDER_ID VARCHAR(30),
+	AMOUNT VARCHAR(30),
+	PROFIT NUMBER(38,0),
+	QUANTITY NUMBER(38,0),
+	CATEGORY VARCHAR(30),
+	SUBCATEGORY VARCHAR(30)
+);
+
+
+create  transient TABLE COPY_DB.PUBLIC.profit_transient (
+	ORDER_ID VARCHAR(30),
+	AMOUNT VARCHAR(30),
+	PROFIT NUMBER(38,0),
+	QUANTITY NUMBER(38,0),
+	CATEGORY VARCHAR(30),
+	SUBCATEGORY VARCHAR(30)
+);
+
+
+create  temporary TABLE COPY_DB.PUBLIC.profit_temp (
+	ORDER_ID VARCHAR(30),
+	AMOUNT VARCHAR(30),
+	PROFIT NUMBER(38,0),
+	QUANTITY NUMBER(38,0),
+	CATEGORY VARCHAR(30),
+	SUBCATEGORY VARCHAR(30)
+);
+
+show tables
+
+select * from COPY_DB.PUBLIC.ORDERS
+
+insert into COPY_DB.PUBLIC.profit (
+select * from COPY_DB.PUBLIC.ORDERS )
+
+
+insert into profit_transient (
+select * from COPY_DB.PUBLIC.ORDERS )
+
+
+
+insert into COPY_DB.PUBLIC.profit_temp (
+select * from COPY_DB.PUBLIC.ORDERS )
+
+
+select * from profit 
+
+select * from profit_transient 
+
+drop table profit_transient;
+
+undrop table profit_transient;
+
+select * from profit_transient;
+
+select * from profit_temp 
+
+
+
+
+ 
+ 
+ 
+
+
