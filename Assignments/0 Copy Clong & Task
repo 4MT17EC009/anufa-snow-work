@@ -1,0 +1,65 @@
+SHOW TABLES ;
+
+select * from COPY_DB.PUBLIC.ORDERS  
+
+//For orders table, we are paying 1$/month, if we want to take 10 copies or multiple copies we can take it without paying anything. only for original table we need to pay
+
+//we can clone database, objects, stages, schema etc
+
+CREATE TABLE orders_clone_1
+CLONE  ORDERS
+
+//Validate
+select * from orders_clone_1 --> 3.4k Records
+
+//Delete 
+DELETE FROM orders_cLONE_1   WHERE AMOUNT > 10
+
+//validate
+select * from orders_clone_1        >Deleted
+
+//Verify with original table, data will not be deleted
+select * from COPY_DB.PUBLIC.ORDERS  
+
+//To Replicate entire data
+CREATE SCHEMA  VITECH_CLONE 
+   CLONE PUBLIC ; 
+
+CREATE DATABASE VITECH_DB_CLONE 
+     CLONE COPY_DB 
+	 
+----------------------------------
+
+// Task -> To schedule SQL Statements
+
+//First, lets create a Database
+
+CREATE OR REPLACE TRANSIENT DATABASE TASK_DB;
+
+// Prepare table
+CREATE OR REPLACE TABLE CUSTOMERS (
+    CUSTOMER_ID INT AUTOINCREMENT START = 1 INCREMENT =1,
+    FIRST_NAME VARCHAR(40) DEFAULT 'Nethra' ,
+    CREATE_DATE TIMESTAMP)
+
+describe table CUSTOMERS
+
+// Create task
+CREATE OR REPLACE TASK CUSTOMER_INSERT
+    WAREHOUSE = COMPUTE_WH
+    SCHEDULE = '1 MINUTE'
+    AS 
+    INSERT INTO CUSTOMERS(CREATE_DATE) VALUES(CURRENT_TIMESTAMP);
+    
+SHOW TASKS;  //By default tasks be in suspended state and we need to resume it
+
+// Task starting and suspending
+ALTER TASK CUSTOMER_INSERT RESUME;
+ALTER TASK CUSTOMER_INSERT SUSPEND;
+
+SELECT * FROM CUSTOMERS
+
+
+
+
+
