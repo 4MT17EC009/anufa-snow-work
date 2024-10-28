@@ -1,0 +1,30 @@
+-- Time Travel --
+time travel is nothin but to retrieve the historical data within 90 days
+For example, today created a table employees (on 1st day)
+inserted 500 rows
+2nd day -> deleted 400 rows
+5th day we want the entire data including what we have deleted or updated on to the table
+
+-- 4 Types of Time Travel --
+Standard                     Enterprise            Business Critical             Virtual Private
+Time travel upto 1 day         90 days                 90 days                       90 days
+
+Default Retention period be for 1day
+we can modify the retention period as per our requirement 5 days or 90 days or anything
+
+-- fail safe --
+If we want to retrieve the data after the time travel of 90 days we use fail safe
+it has to be used within 7 days of time travel
+later we need to connect with snowflake team for the retrieved data
+
+
+
+-- Table types --
+Permanaent                              Transient                              Temporary
+data is going to be permanent       only for data that does not          Non Permanent data
+                                       need to be protected
+create table table name             create transient table               create temporary table
+0-90 days time travel                0-1 day                              0-1 day
+fail Safe is availble               Fail safe (X)                        Fail safe (X)
+Data will be available              until dropped                        only to session 
+until dropped
