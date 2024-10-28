@@ -1,0 +1,242 @@
+//Create a database called stream_db
+
+CREATE OR REPLACE TRANSIENT DATABASE STREAMS_DB;
+
+-- Create Source table 1 --
+create or replace table sales_raw_staging(
+  id varchar,
+  product varchar,
+  price varchar,
+  amount varchar,
+  store_id varchar);
+
+//Insert the Values
+insert into sales_raw_staging 
+    values
+        (1,'Banana',1.99,1,1),
+        (2,'Lemon',0.99,1,1),
+        (3,'Apple',1.79,1,2),
+        (4,'Orange Juice',1.89,1,2),
+        (5,'Cereals',5.98,2,1);  
+
+//validate the Table
+select * from sales_raw_staging
+
+-- Create Source table 2 --
+create or replace table store_table(
+  store_id number,
+  location varchar,
+  employees number);
+
+//Insert the Values
+INSERT INTO STORE_TABLE VALUES(1,'Chicago',33);
+INSERT INTO STORE_TABLE VALUES(2,'London',12);
+
+//validate the Table
+select * from store_table
+
+//We have 2 Source table now, which we need to combine and load into the the destination or the final target table by using JOINS Query
+
+//Create the finl Target Table
+create or replace table sales_final_table(
+  id int,
+  product varchar,
+  price number,
+  amount int,
+  store_id int,
+  location varchar,
+  employees int);
+
+ -- Insert into final table  ---> dont run rather create stream object
+INSERT INTO sales_final_table 
+    SELECT 
+    SA.id,
+    SA.product,
+    SA.price,
+    SA.amount,
+    ST.STORE_ID,
+    ST.LOCATION, 
+    ST.EMPLOYEES 
+    FROM SALES_RAW_STAGING SA
+    JOIN STORE_TABLE ST ON ST.STORE_ID=SA.STORE_ID ;
+
+//validate the Final Table
+select * from sales_final_table
+
+//Everytime we run the insert query to final table, there's duplication of Data, which we do not want so instead of writing insert query and running it, we create stream object
+
+-- Create a stream object
+create or replace stream sales_stream on table sales_raw_staging;
+
+SHOW STREAMS;
+
+select *  from sales_stream
+
+-- insert 2 values to 1st source table
+insert into sales_raw_staging  
+    values
+        (6,'Mango',1.99,1,2),
+        (7,'Garlic',0.99,1,1);
+
+//Whatever we are adding to the source table its going to get added on to the stream object as well
+
+select * from sales_raw_staging
+select *  from sales_stream
+
+-- inserting 2 more values into sales_raw_staging
+insert into sales_raw_staging  
+    values
+        (8,'Mango',1.99,1,2),
+        (9,'Garlic',0.99,1,1);
+
+select * from sales_raw_staging
+select *  from sales_stream
+
+//source table is ready, stream object is ready, target table is ready, the connetion between stream object and target table is missing
+
+select * from sales_final_table
+
+//Insert 2 more values into the Source table
+insert into sales_raw_staging  
+    values
+        (8,'Paprika',4.99,1,2),
+        (9,'Tomato',3.99,1,2);
+
+// we do not want to run it manually everytime using the insert function, so we need to create a Task
+--create task and take values for every 1 minute 
+CREATE OR REPLACE TASK SALES_INSERT
+    WAREHOUSE = COMPUTE_WH
+    SCHEDULE = '1 MINUTE'
+    AS 
+INSERT INTO sales_final_table 
+    SELECT 
+    SA.id,
+    SA.product,
+    SA.price,
+    SA.amount,
+    ST.STORE_ID,
+    ST.LOCATION, 
+    ST.EMPLOYEES 
+    FROM SALES_STREAM SA
+    JOIN STORE_TABLE ST ON ST.STORE_ID=SA.STORE_ID ;
+
+//Now we need to resume the task because by default it will be in suspended state
+ALTER TASK SALES_INSERT RESUME;
+
+SHOW TASKS;
+
+//User is going to insert the data/values into the source1 table that is raw staging table
+
+-------------------------------------------------------------------
+Data Masking
+
+//to provide security to the sensitive data using symbols, we use Data Masking
+
+//create a Database first
+create database demo_db;
+
+-- Prepare table --
+create or replace table customers(
+  id number,
+  full_name varchar, 
+  email varchar,
+  phone varchar,
+  spent number,
+  create_date DATE DEFAULT CURRENT_DATE);
+
+-- insert values in table --
+insert into customers (id, full_name, email,phone,spent)
+values
+  (1,'Lewiss MacDwyer','lmacdwyer0@un.org','262-665-9168',140),
+  (2,'Ty Pettingall','tpettingall1@mayoclinic.com','734-987-7120',254),
+  (3,'Marlee Spadazzi','mspadazzi2@txnews.com','867-946-3659',120),
+  (4,'Heywood Tearney','htearney3@patch.com','563-853-8192',1230),
+  (5,'Odilia Seti','oseti4@globo.com','730-451-8637',143),
+  (6,'Meggie Washtell','mwashtell5@rediff.com','568-896-6138',600);
+
+select * from customers ;   //accountadmin can see all the data
+
+//2 persons 1 analyst (Who can clearly see the entire data) 2nd Read only User (Who should see the data partially) to do this we need to create roles
+
+//Create 2 more Roles
+-- set up roles --
+CREATE OR REPLACE ROLE ANALYST_MASKED;
+CREATE OR REPLACE ROLE ANALYST_FULL;
+
+-- give access to database for both the roles --
+GRANT USAGE ON DATABASE DEMO_DB TO ROLE ANALYST_MASKED;
+GRANT USAGE ON DATABASE DEMO_DB TO ROLE ANALYST_FULL;
+
+-- grant select on table to roles --
+GRANT SELECT ON TABLE DEMO_DB.PUBLIC.CUSTOMERS TO ROLE ANALYST_MASKED;
+GRANT SELECT ON TABLE DEMO_DB.PUBLIC.CUSTOMERS TO ROLE ANALYST_FULL;
+
+-- grant schema to roles --
+GRANT USAGE ON SCHEMA DEMO_DB.PUBLIC TO ROLE ANALYST_MASKED;
+GRANT USAGE ON SCHEMA DEMO_DB.PUBLIC TO ROLE ANALYST_FULL;
+
+-- grant warehouse access to roles --
+GRANT USAGE ON WAREHOUSE COMPUTE_WH TO ROLE ANALYST_MASKED;
+GRANT USAGE ON WAREHOUSE COMPUTE_WH TO ROLE ANALYST_FULL;
+
+select current_user()
+
+-- assign roles to a user --
+GRANT ROLE ANALYST_MASKED TO USER vitech;
+GRANT ROLE ANALYST_FULL TO USER vitech;
+
+//To mask the data use masking policy
+create or replace masking policy phone_policy 
+    as (val varchar) returns varchar ->
+            case        
+            when current_role() in ('ANALYST_FULL', 'ACCOUNTADMIN') then val
+            else '##-###-##'
+            end;
+
+-- Apply policy on a specific column that is for Phone number--
+ALTER TABLE IF EXISTS CUSTOMERS MODIFY COLUMN phone 
+SET MASKING POLICY phone_policy;
+
+-- Create another policy for Names --
+create or replace masking policy names as (val varchar) returns varchar ->
+            case
+            when current_role() in ('ANALYST_FULL', 'ACCOUNTADMIN') then val
+            else CONCAT(LEFT(val,2),'*******')
+            end;
+
+-- apply policy for names --
+ALTER TABLE IF EXISTS CUSTOMERS MODIFY COLUMN full_name
+SET MASKING POLICY names;
+
+-- apply policy for email --
+ALTER TABLE IF EXISTS CUSTOMERS MODIFY COLUMN email
+SET MASKING POLICY names;
+
+//if we need to remove masking policies just type unset
+ALTER TABLE IF EXISTS CUSTOMERS MODIFY COLUMN phone
+UNSET MASKING POLICY;
+
+
+ALTER TABLE IF EXISTS CUSTOMERS MODIFY COLUMN email
+UNSET MASKING POLICY;
+
+
+-- Validating policies
+
+USE ROLE ANALYST_FULL;
+SELECT * FROM CUSTOMERS;
+
+USE ROLE ANALYST_MASKED;
+SELECT * FROM CUSTOMERS;
+
+
+
+
+
+
+
+
+
+
+
+
