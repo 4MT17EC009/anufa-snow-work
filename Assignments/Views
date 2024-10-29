@@ -1,0 +1,131 @@
+//select the table MOVIE_TITLES present in OUR_FIRST_DB Database
+
+select * from OUR_FIRST_DB.PUBLIC.MOVIE_TITLES
+
+//Create a view with specific Columns
+
+create or replace view movie_view 
+as (
+select show_id   , type , director 
+       from OUR_FIRST_DB.PUBLIC.MOVIE_TITLES )
+
+select * from MOVIE_TITLES ;
+
+select * from movie_view
+
+//deleting few records from original table
+delete from  MOVIE_TITLES where release_year < 2011
+
+show views
+
+//create secure view
+create or replace secure view movies_view 
+as (
+select show_id   , type , director 
+       from OUR_FIRST_DB.PUBLIC.MOVIE_TITLES  )
+
+//If secured then secured = True else False
+
+select * from movie_view
+//when we click on query i_d the results will be stored in Cache
+Cache -> Temporary Storage Location
+First, It will go to Table Scan and the the Results
+//How many times ever if we run, the results are going to get stored in cache, its not going to hit the database
+
+
+//lets delete some more records
+delete from  MOVIE_TITLES where release_year < 2013
+
+//Lets disable cache
+   -- Remove caching just to have a fair test -- Part 1
+
+ALTER SESSION SET USE_CACHED_RESULT=FALSE; -- disable global caching
+ALTER warehouse compute_wh suspend;
+ALTER warehouse compute_wh resume;
+
+-- Prepare table
+
+CREATE OR REPLACE TABLE ORDERS AS
+SELECT * FROM SNOWFLAKE_SAMPLE_DATA.TPCH_SF100.ORDERS;
+
+//Lets fetch only 100 records by applying limit
+SELECT * FROM ORDERS LIMIT 100
+
+//Perform aggregate Functions
+-- Example statement view -- 
+//As data is bulk its going to take certain time
+
+SELECT
+YEAR(O_ORDERDATE) AS YEAR,
+MAX(O_COMMENT) AS MAX_COMMENT,
+MIN(O_COMMENT) AS MIN_COMMENT,
+MAX(O_CLERK) AS MAX_CLERK,
+MIN(O_CLERK) AS MIN_CLERK
+FROM ORDERS
+GROUP BY YEAR(O_ORDERDATE)
+ORDER BY YEAR(O_ORDERDATE);         //Taking 6sec for execution
+
+//Re run the above query
+
+SELECT
+YEAR(O_ORDERDATE) AS YEAR,
+MAX(O_COMMENT) AS MAX_COMMENT,
+MIN(O_COMMENT) AS MIN_COMMENT,
+MAX(O_CLERK) AS MAX_CLERK,
+MIN(O_CLERK) AS MIN_CLERK
+FROM ORDERS
+GROUP BY YEAR(O_ORDERDATE)
+ORDER BY YEAR(O_ORDERDATE);        //6.1 sec
+
+//As the data is bulk we need to work on query Performance
+//If Single table then we can create a materialized View
+
+-- Create materialized view
+CREATE OR REPLACE MATERIALIZED VIEW ORDERS_MV
+AS 
+SELECT
+YEAR(O_ORDERDATE) AS YEAR,
+MAX(O_COMMENT) AS MAX_COMMENT,
+MIN(O_COMMENT) AS MIN_COMMENT,
+MAX(O_CLERK) AS MAX_CLERK,
+MIN(O_CLERK) AS MIN_CLERK
+FROM ORDERS
+GROUP BY YEAR(O_ORDERDATE);
+
+show views
+
+  -- Test updated data --
+-- Example statement view -- 
+SELECT
+YEAR(O_ORDERDATE) AS YEAR,
+MAX(O_COMMENT) AS MAX_COMMENT,
+MIN(O_COMMENT) AS MIN_COMMENT,
+MAX(O_CLERK) AS MAX_CLERK,
+MIN(O_CLERK) AS MIN_CLERK
+FROM ORDERS.TPCH_SF100.ORDERS
+GROUP BY YEAR(O_ORDERDATE)
+ORDER BY YEAR(O_ORDERDATE);
+//Rather than using this query run the below query
+
+-- Query view --
+SELECT * FROM ORDERS_MV
+ORDER BY YEAR;                          //345ms
+
+SHOW MATERIALIZED VIEWS;
+
+//For the data lets update some records
+UPDATE ORDERS
+SET O_CLERK='Clerk#99900000' 
+WHERE O_ORDERDATE='1993-01-01'
+
+//No need to refresh Materialised view just run select all query 
+-- Query view --
+SELECT * FROM ORDERS_MV
+ORDER BY YEAR;
+
+
+
+
+
+
+
