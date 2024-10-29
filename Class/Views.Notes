@@ -1,0 +1,85 @@
+-- Views --
+
+Views are logical Representation of Tables
+I have a table named employees (original Table) with 100 records, Rather than sharing the original table,
+we are going to create a view and then provide access
+
+View --> Read Only access
+
+-> A views is a database object that contains SQL Query built over one or more multiple Tables
+-> A view can be considered as a virtual table that can be used almost anywhere that a table can be used 
+   (Filters, subjoins, subqueries)
+-> Whenever you query a view, the underlying SQL query associated with the view gets executed dynamically
+   and will fetch data from underlying Tables
+-> Views serve a variety of purposes like combining, segregating and protecting data
+SYNTAX
+-> CREATE OR REPLACE view view_name
+   as
+   SELECT STATEMENT
+
+-> if we delete original table data in the view same is going to appear
+-> Its like going to write a sql query on top of view
+
+
+-- 3 Types --
+1) Secure Views
+2) Materialized Views
+3) non Materialized Views
+
+Secure views
+-> A secure view does not allow users to see the definition of the view
+-> Users cannot see underlying SQL Query
+-> The definition of secure view is only exposed to authorised users, i.e, users who have only access/been
+   granted the role that owns a view
+-> 2 ADVANTAGES
+   * can Protect the data by not xposing it to other users
+   * Do not want users to see underlying tables present in our database
+-> Use SECURE Keyword to create Secure View
+SYNTAX
+-> CREATE OR REPLACE SECURE VIEW view_name
+   as
+   SELECT STATEMENT
+
+Materialized Views
+-> A materialized view stores pre-computed result set
+-> Querying a materialized view gives BETTER PERFORMANCE than querying base tables
+-> Can create on a SINGLE TABLE, cannot build on multiple tables
+-> Designed for improved query performance when we are using same dataset repeatedly
+-> Available in Enterprise edition and Higher
+-> Can be created with MATERIALIZED Keyword
+SYNTAX
+-> CREATE OR REPLACE MATERIALIZED VIEW view_name
+   as
+   SELECT STATEMENT
+
+-- Refresh of Materialized Views --
+-> No need to refresh data manually
+-> Snowflake performs automatic background maintenance of materialized views
+-> When a base table changes, snowflake runs a background process to keep the materialized views up-to-date,
+   but takes a minute to refresh
+
+-- When to create a Regular View and Materialized View --
+
+REGULAR VIEW
+1) The Results of the view change often
+2) The results are not used often
+3) The Query is simple
+4) The query contains multiple tables
+
+MATERIALIZED VIEW
+1) The query results from view dont change very often
+2) The results of Views are used often
+3) The Query consumes lot of resources means query takes longer time
+
+-- Limitations of Materialized views --
+1) Can query a single table only
+2) Does not support joins, including self joins
+3) Does not support all aggregate and windowing Functions
+4) When the Base table is altered or Dropped, the Materialized view is suspended
+5) Materialized view cannot query
+   -> Another Materialized view
+   -> A Normal view
+   -> A UDF (User Defined Function)
+6) Will not support aggregation of data
+
+
